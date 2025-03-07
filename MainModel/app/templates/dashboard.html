@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Dental AI Assistant Dashboard</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Upload Dental Scan</h4>
+                </div>
+                <div class="card-body">
+                    <form id="scanForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="scanFile" class="form-label">Select dental X-ray or scan</label>
+                            <input type="file" class="form-control" id="scanFile" name="file" accept=".png,.jpg,.jpeg,.dcm" required>
+                            <div class="form-text">Supported formats: PNG, JPG, JPEG, DCM</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Analyze Scan</button>
+                    </form>
+                    <div id="uploadError" class="alert alert-danger mt-3" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div id="results" class="mt-4" style="display: none;">
+                <div class="row">
+                    <!-- Overall Health Assessment -->
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h4 class="mb-0">Overall Health Assessment</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div id="healthScore" class="text-center mb-3">
+                                            <!-- Health score gauge will be inserted here -->
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Health Status: <span id="healthStatus" class="badge"></span></h5>
+                                        <p>Next Recommended Checkup: <span id="nextCheckup"></span></p>
+                                        <div id="urgentIssues"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Findings -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Detailed Findings</h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="findings"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Treatment Plan -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Treatment Plan</h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="treatmentPlan"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preventive Measures -->
+                    <div class="col-12 mt-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Preventive Measures & Recommendations</h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="preventiveMeasures"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Quick Stats</h4>
+                </div>
+                <div class="card-body">
+                    <p>Welcome to the Dental AI Assistant dashboard. Upload a dental scan to get AI-powered analysis and treatment suggestions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.getElementById('scanForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Hide previous error messages and results
+    document.getElementById('uploadError').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    
+    const formData = new FormData();
+    const fileInput = document.getElementById('scanFile');
+    
+    if (fileInput.files.length === 0) {
+        showError('Please select a file to upload');
+        return;
+    }
+    
+    formData.append('file', fileInput.files[0]);
+    
+    // Show loading state
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing...';
+
+    fetch('/analyze_scan', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showError(data.error);
+            return;
+        }
+        
+        document.getElementById('results').style.display = 'block';
+        
+        // Display health assessment
+        const health = data.health_assessment;
+        document.getElementById('healthStatus').textContent = health.health_status;
+        document.getElementById('healthStatus').className = `badge bg-${getHealthStatusColor(health.health_status)}`;
+        document.getElementById('nextCheckup').textContent = health.next_checkup;
+        
+        // Create health score gauge
+        createHealthGauge(health.overall_score);
+        
+        // Display urgent issues
+        if (health.urgent_issues.length > 0) {
+            document.getElementById('urgentIssues').innerHTML = `
+                <div class="alert alert-danger">
+                    <strong>Urgent Issues Requiring Attention:</strong>
+                    <ul class="mb-0">
+                        ${health.urgent_issues.map(issue => `<li>${issue}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // Display findings
+        const findingsHtml = data.findings.map(finding => `
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">${finding.condition}</h5>
+                    <div class="progress mb-3">
+                        <div class="progress-bar ${getSeverityColor(finding.severity)}" 
+                             role="progressbar" 
+                             style="width: ${finding.confidence * 100}%">
+                            Confidence: ${(finding.confidence * 100).toFixed(1)}%
+                        </div>
+                    </div>
+                    <p><strong>Location:</strong> ${finding.location}</p>
+                    <p><strong>Severity:</strong> <span class="badge ${getSeverityColor(finding.severity)}">${finding.severity}</span></p>
+                    <p><strong>Progression:</strong> ${finding.progression}</p>
+                    ${finding.immediate_attention ? '<div class="alert alert-warning">Requires immediate attention</div>' : ''}
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('findings').innerHTML = findingsHtml;
+
+        // Display treatment plan
+        const treatmentPlan = data.treatment_plan;
+        document.getElementById('treatmentPlan').innerHTML = `
+            ${treatmentPlan.immediate_actions.length > 0 ? `
+                <h5 class="text-danger">Immediate Actions Required</h5>
+                <ul class="list-group mb-3">
+                    ${treatmentPlan.immediate_actions.map(action => `
+                        <li class="list-group-item">
+                            <h6>${action.condition}</h6>
+                            <p>${action.description}</p>
+                            <strong>Treatments:</strong>
+                            <ul>
+                                ${action.treatments.map(t => `<li>${t}</li>`).join('')}
+                            </ul>
+                            <p><strong>Recovery Time:</strong> ${action.estimated_recovery}</p>
+                            <p><strong>Follow-up:</strong> ${action.follow_up}</p>
+                        </li>
+                    `).join('')}
+                </ul>
+            ` : ''}
+            
+            <h5>Long-term Treatment Plan</h5>
+            <ul class="list-group mb-3">
+                ${treatmentPlan.long_term_plan.map(plan => `
+                    <li class="list-group-item">
+                        <h6>${plan.condition}</h6>
+                        <p>${plan.description}</p>
+                        <strong>Recommended Actions:</strong>
+                        <ul>
+                            ${plan.treatments.map(t => `<li>${t}</li>`).join('')}
+                        </ul>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+
+        // Display preventive measures
+        document.getElementById('preventiveMeasures').innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Preventive Measures</h5>
+                    <ul class="list-group mb-3">
+                        ${treatmentPlan.preventive_measures.map(measure => 
+                            `<li class="list-group-item">${measure}</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Lifestyle Recommendations</h5>
+                    <ul class="list-group mb-3">
+                        ${treatmentPlan.lifestyle_recommendations.map(rec => 
+                            `<li class="list-group-item">${rec}</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+    })
+    .catch(error => {
+        showError('An error occurred while analyzing the scan. Please try again.');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        // Reset button state
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+    });
+});
+
+function createHealthGauge(score) {
+    const ctx = document.createElement('canvas');
+    document.getElementById('healthScore').innerHTML = '';
+    document.getElementById('healthScore').appendChild(ctx);
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [score, 100 - score],
+                backgroundColor: [getHealthScoreColor(score), '#eee']
+            }]
+        },
+        options: {
+            circumference: 180,
+            rotation: -90,
+            cutout: '80%',
+            plugins: {
+                tooltip: { enabled: false },
+                legend: { display: false },
+                afterDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    ctx.save();
+                    ctx.font = '30px Arial';
+                    ctx.fillStyle = '#000';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(score + '%', chart.width / 2, chart.height - 10);
+                    ctx.restore();
+                }
+            }
+        }
+    });
+}
+
+function getHealthStatusColor(status) {
+    switch(status) {
+        case 'Excellent': return 'success';
+        case 'Good': return 'info';
+        case 'Fair': return 'warning';
+        case 'Poor': return 'danger';
+        default: return 'secondary';
+    }
+}
+
+function getSeverityColor(severity) {
+    switch(severity) {
+        case 'High': return 'bg-danger';
+        case 'Medium': return 'bg-warning';
+        case 'Low': return 'bg-info';
+        default: return 'bg-secondary';
+    }
+}
+
+function getHealthScoreColor(score) {
+    if (score >= 90) return '#28a745';
+    if (score >= 75) return '#17a2b8';
+    if (score >= 60) return '#ffc107';
+    return '#dc3545';
+}
+
+function showError(message) {
+    const errorDiv = document.getElementById('uploadError');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+}
+</script>
+{% endblock %}
+{% endblock %} 
