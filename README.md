@@ -14,23 +14,134 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+<<<<<<< HEAD
+# AI-Powered Dental Treatment Suggestion System
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+An intelligent system that assists dental professionals in diagnosis and treatment planning using artificial intelligence and machine learning.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Features
 
-## Learn More
+- Patient data analysis using AI
+- Digital X-ray and scan processing
+- Treatment suggestions with explanations
+- Integration with existing dental systems
+- Continuous learning from professional feedback
+- Secure patient data handling
 
-To learn more about Next.js, take a look at the following resources:
+## Setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Install dependencies:
+bash
+pip install -r requirements.txt
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+2. Set up environment variables:
+Create a .env file with:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+FLASK_APP=app.py
+FLASK_ENV=development
+SECRET_KEY=your_secret_key
+MONGODB_URI=your_mongodb_uri
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+3. Run the application:
+bash
+flask run
+
+
+## Project Structure
+
+
+dental-ai/
+├── app.py                 # Main Flask application
+├── config.py             # Configuration settings
+├── models/              # AI/ML models
+├── static/             # Static files (CSS, JS, images)
+├── templates/          # HTML templates
+└── utils/              # Utility functions
+
+
+## API Endpoints
+
+- POST /api/analyze: Upload and analyze patient data
+- GET /api/treatments: Get treatment suggestions
+- POST /api/feedback: Submit professional feedback
+
+## Security
+
+- All patient data is encrypted
+- HIPAA compliant
+- Secure authentication system
+- Regular security audits
+
+## Contributing
+
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests. "# Final-Dental" 
+"# Dental-Assistant" 
+=======
+# AI-Powered Dental Treatment Suggestion System
+
+An intelligent system that assists dental professionals in diagnosis and treatment planning using artificial intelligence and machine learning.
+
+## Features
+
+- Patient data analysis using AI
+- Digital X-ray and scan processing
+- Treatment suggestions with explanations
+- Integration with existing dental systems
+- Continuous learning from professional feedback
+- Secure patient data handling
+
+## Setup
+
+1. Install dependencies:
+bash
+pip install -r requirements.txt
+
+
+2. Set up environment variables:
+Create a .env file with:
+
+FLASK_APP=app.py
+FLASK_ENV=development
+SECRET_KEY=your_secret_key
+MONGODB_URI=your_mongodb_uri
+
+
+3. Run the application:
+bash
+flask run
+
+
+## Project Structure
+
+
+dental-ai/
+├── app.py                 # Main Flask application
+├── config.py             # Configuration settings
+├── models/              # AI/ML models
+├── static/             # Static files (CSS, JS, images)
+├── templates/          # HTML templates
+└── utils/              # Utility functions
+
+
+## API Endpoints
+
+- POST /api/analyze: Upload and analyze patient data
+- GET /api/treatments: Get treatment suggestions
+- POST /api/feedback: Submit professional feedback
+
+## Security
+
+- All patient data is encrypted
+- HIPAA compliant
+- Secure authentication system
+- Regular security audits
+
+## Contributing
+
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests. "# Final-Dental" 
+>>>>>>> 8f5e8f07cde97c9974b95930b3ed777561be4990
+"# Dental-Assistant" 
+"# Dental-Assistant" 
+"# Dental-Assistant"
